@@ -1,0 +1,325 @@
+{
+  "appConfig": {},
+  "description": "<a href=\"https:// opsmxdemo.yahoo.opsmx.net\"> opsmxdemo.yahoo.opsmx.net</a>\n\n\nThis sample pipeline shows green deployment, where green deployment happens.",
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "raviranjan.gorremuchu@opsmx.io",
+  "limitConcurrent": true,
+  "parameterConfig": [
+    {
+      "default": "v2",
+      "description": "Canary Version",
+      "hasOptions": false,
+      "label": "Canary Version",
+      "name": "release",
+      "options": [],
+      "pinned": false,
+      "required": true
+    }
+  ],
+  "schema": "1",
+  "spelEvaluator": "v4",
+  "stages": [
+    {
+      "account": "k8s-test",
+      "cloudProvider": "kubernetes",
+      "comments": "<a href=\"http://opsmxdemo.yahoo.opsmx.net\"> opsmxdemo.yahoo.opsmx.net</a>\n\nCreating New ingress  for Canary deployment with 100% traffic.",
+      "manifestArtifact": {
+        "artifactAccount": "opsmxdemo_account",
+        "id": "99386da2-1b6d-4d01-9843-48ceff8dcfb4",
+        "name": "kubedeploys/green-ingress-deploy.yml",
+        "reference": "https://api.github.com/repos/opsmx/sample-pipeline-manifest/contents/kubedeploys/green-ingress-deploy.yml",
+        "type": "embedded/base64",
+        "version": "main"
+      },
+      "manifests": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "metadata": {
+            "labels": {
+              "release": "${parameters.release}"
+            },
+            "name": "nginx-deployment-${parameters.release}"
+          },
+          "spec": {
+            "minReadySeconds": 5,
+            "selector": {
+              "matchLabels": {
+                "app": "nginx",
+                "release": "${parameters.release}"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app": "nginx",
+                  "release": "${parameters.release}"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "env": [
+                      {
+                        "name": "APP_COLOR",
+                        "value": "green"
+                      }
+                    ],
+                    "image": "quay.io/opsmxpublic/simple-webapp:v2",
+                    "name": "webapp-green",
+                    "ports": [
+                      {
+                        "containerPort": 8080
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "apiVersion": "v1",
+          "kind": "Service",
+          "metadata": {
+            "labels": {
+              "release": "${parameters.release}"
+            },
+            "name": "nginx-svc-${parameters.release}",
+            "namespace": "ssd-services"
+          },
+          "spec": {
+            "ports": [
+              {
+                "port": 80,
+                "protocol": "TCP",
+                "targetPort": 8080
+              }
+            ],
+            "selector": {
+              "app": "nginx",
+              "release": "${parameters.release}"
+            }
+          }
+        },
+        {
+          "apiVersion": "networking.k8s.io/v1",
+          "kind": "Ingress",
+          "metadata": {
+            "annotations": {
+              "kubernetes.io/ingress.class": "nginx",
+              "nginx.ingress.kubernetes.io/canary": "true",
+              "nginx.ingress.kubernetes.io/canary-weight": "100"
+            },
+            "labels": {
+              "app": "nginx",
+              "release": "${parameters.release}"
+            },
+            "name": "nginx-ingress-${parameters.release}"
+          },
+          "spec": {
+            "rules": [
+              {
+                "host": "opsmxdemo.yahoo.opsmx.net",
+                "http": {
+                  "paths": [
+                    {
+                      "backend": {
+                        "service": {
+                          "name": "nginx-svc-${parameters.release}",
+                          "port": {
+                            "number": 80
+                          }
+                        }
+                      },
+                      "pathType": "ImplementationSpecific"
+                    }
+                  ]
+                }
+              }
+            ],
+            "tls": [
+              {
+                "hosts": [
+                  "opsmxdemo.yahoo.opsmx.net"
+                ],
+                "secretName": "nginx-ingress"
+              }
+            ]
+          }
+        }
+      ],
+      "moniker": {
+        "app": "yahoopoc"
+      },
+      "name": "Deploy Canary Version",
+      "namespaceOverride": "ssd-services",
+      "refId": "1",
+      "requisiteStageRefIds": [],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "account": "k8s-test",
+      "app": "yahoopoc",
+      "cloudProvider": "kubernetes",
+      "location": "ssd-services",
+      "manifestName": "ingress nginx-ingress-${parameters.release}",
+      "mode": "static",
+      "name": "Designate Canary Version as Current",
+      "options": {
+        "mergeStrategy": "json",
+        "record": false
+      },
+      "patchBody": [
+        {
+          "op": "remove",
+          "path": "/metadata/annotations/nginx.ingress.kubernetes.io~1canary"
+        },
+        {
+          "op": "remove",
+          "path": "/metadata/annotations/nginx.ingress.kubernetes.io~1canary-weight"
+        }
+      ],
+      "refId": "2",
+      "requisiteStageRefIds": [
+        "15"
+      ],
+      "source": "text",
+      "stageEnabled": {
+        "expression": "${#judgment(\"Approve Removing Base Version\") == 'Yes'}",
+        "type": "expression"
+      },
+      "type": "patchManifest"
+    },
+    {
+      "failOnFailedExpressions": false,
+      "failPipeline": true,
+      "instructions": "Remove Base Version ?",
+      "judgmentInputs": [
+        {
+          "value": "Yes"
+        },
+        {
+          "value": "No"
+        }
+      ],
+      "name": "Approve Removing Base Version",
+      "notifications": [],
+      "refId": "7",
+      "requisiteStageRefIds": [
+        "1"
+      ],
+      "type": "manualJudgment"
+    },
+    {
+      "account": "k8s-test",
+      "app": "yahoopoc",
+      "cloudProvider": "kubernetes",
+      "location": "ssd-services",
+      "manifestName": "deployment nginx-deployment-v1",
+      "mode": "static",
+      "name": "Scale Down Base Version",
+      "options": {
+        "mergeStrategy": "strategic",
+        "record": true
+      },
+      "patchBody": [
+        {
+          "spec": {
+            "replicas": 0
+          }
+        }
+      ],
+      "refId": "14",
+      "requisiteStageRefIds": [
+        "7"
+      ],
+      "source": "text",
+      "stageEnabled": {
+        "expression": "${#judgment(\"Approve Removing Base Version\") == 'Yes'}",
+        "type": "expression"
+      },
+      "type": "patchManifest"
+    },
+    {
+      "account": "k8s-test",
+      "app": "yahoopoc",
+      "cloudProvider": "kubernetes",
+      "kinds": [
+        "ingress"
+      ],
+      "labelSelectors": {
+        "selectors": [
+          {
+            "key": "release",
+            "kind": "NOT_EQUALS",
+            "values": [
+              "v2"
+            ]
+          }
+        ]
+      },
+      "location": "ssd-services",
+      "mode": "label",
+      "name": "Delete Base Version Ingress",
+      "options": {
+        "cascading": true
+      },
+      "refId": "15",
+      "requisiteStageRefIds": [
+        "14"
+      ],
+      "stageEnabled": {
+        "expression": "${#judgment(\"Approve Removing Base Version\") == 'Yes'}",
+        "type": "expression"
+      },
+      "type": "deleteManifest"
+    },
+    {
+      "account": "k8s-test",
+      "app": "yahoopoc",
+      "cloudProvider": "kubernetes",
+      "kinds": [
+        "deployment",
+        "ingress",
+        "service"
+      ],
+      "labelSelectors": {
+        "selectors": [
+          {
+            "key": "release",
+            "kind": "EQUALS",
+            "values": [
+              "${parameters.release}"
+            ]
+          }
+        ]
+      },
+      "location": "ssd-services",
+      "mode": "label",
+      "name": "Rollback to Base Version",
+      "options": {
+        "cascading": true
+      },
+      "refId": "24",
+      "requisiteStageRefIds": [
+        "7"
+      ],
+      "stageEnabled": {
+        "expression": "${#judgment(\"Approve Removing Base Version\") == 'No'}",
+        "type": "expression"
+      },
+      "type": "deleteManifest"
+    }
+  ],
+  "triggers": [],
+  "updateTs": "1717423501000"
+}

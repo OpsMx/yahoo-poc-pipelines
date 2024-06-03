@@ -1,0 +1,178 @@
+{
+  "description": "<a href=\"https://opsmxdemo.yahoo.opsmx.net/\"> opsmxdemo.yahoo.opsmx.net</a>\n\nThis sample pipeline shows Base deployment, where Blue deployment happens.",
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "keerthi.bingi@opsmx.io",
+  "limitConcurrent": true,
+  "schema": "1",
+  "spelEvaluator": "v4",
+  "stages": [
+    {
+      "account": "k8s-test",
+      "cloudProvider": "kubernetes",
+      "comments": "<a href=\"http://opsmxdemo.yahoo.opsmx.net\"> opsmxdemo.yahoo.opsmx.net</a>\n\nCreating New ingress  for Base deployment with 100% traffic.",
+      "manifests": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "metadata": {
+            "labels": {
+              "release": "v1"
+            },
+            "name": "nginx-deployment-v1"
+          },
+          "spec": {
+            "minReadySeconds": 5,
+            "replicas": 1,
+            "selector": {
+              "matchLabels": {
+                "app": "nginx",
+                "release": "v1"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app": "nginx",
+                  "release": "v1"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "env": [
+                      {
+                        "name": "APP_COLOR",
+                        "value": "blue"
+                      }
+                    ],
+                    "image": "quay.io/opsmxpublic/simple-webapp:v2",
+                    "name": "simple-webapp",
+                    "ports": [
+                      {
+                        "containerPort": 8080
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "apiVersion": "v1",
+          "kind": "Service",
+          "metadata": {
+            "name": "nginx-svc"
+          },
+          "spec": {
+            "ports": [
+              {
+                "port": 80,
+                "protocol": "TCP",
+                "targetPort": 8080
+              }
+            ],
+            "selector": {
+              "app": "nginx",
+              "release": "v1"
+            }
+          }
+        },
+        {
+          "apiVersion": "networking.k8s.io/v1",
+          "kind": "Ingress",
+          "metadata": {
+            "annotations": {
+              "cert-manager.io/cluster-issuer": "letsencrypt-prod",
+              "ingress.kubernetes.io/ssl-redirect": "true",
+              "kubernetes.io/ingress.class": "nginx"
+            },
+            "labels": {
+              "app": "nginx",
+              "release": "v1"
+            },
+            "name": "nginx-ingress-v1"
+          },
+          "spec": {
+            "rules": [
+              {
+                "host": "opsmxdemo.yahoo.opsmx.net",
+                "http": {
+                  "paths": [
+                    {
+                      "backend": {
+                        "service": {
+                          "name": "nginx-svc",
+                          "port": {
+                            "number": 80
+                          }
+                        }
+                      },
+                      "pathType": "ImplementationSpecific"
+                    }
+                  ]
+                }
+              }
+            ],
+            "tls": [
+              {
+                "hosts": [
+                  "opsmxdemo.yahoo.opsmx.net"
+                ],
+                "secretName": "nginx-ingress"
+              }
+            ]
+          }
+        }
+      ],
+      "moniker": {
+        "app": "yahoopoc"
+      },
+      "name": "Deploy (Manifest)",
+      "namespaceOverride": "ssd-services",
+      "refId": "1",
+      "requisiteStageRefIds": [
+        "2"
+      ],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "account": "k8s-test",
+      "app": "yahoopoc",
+      "cloudProvider": "kubernetes",
+      "kinds": [
+        "ingress"
+      ],
+      "labelSelectors": {
+        "selectors": [
+          {
+            "key": "release",
+            "kind": "EQUALS",
+            "values": [
+              "v2"
+            ]
+          }
+        ]
+      },
+      "location": "ssd-services",
+      "mode": "label",
+      "name": "Delete (Manifest)",
+      "options": {
+        "cascading": true
+      },
+      "refId": "2",
+      "requisiteStageRefIds": [],
+      "type": "deleteManifest"
+    }
+  ],
+  "triggers": [],
+  "updateTs": "1717422172000"
+}

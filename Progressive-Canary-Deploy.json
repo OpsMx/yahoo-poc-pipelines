@@ -1,8 +1,8 @@
 {
   "appConfig": {},
-  "description": "<a href=\"https:// opsmxdemo.yahoo.opsmx.net\"> opsmxdemo.yahoo.opsmx.net</a>\n\n\nThis sample pipeline shows green deployment, where green deployment happens.",
+  "description": "<a href=\"https:// opsmxdemo.yahoo.opsmx.net\"> opsmxdemo.yahoo.opsmx.net</a>\n\n\nThis sample pipeline shows green deployment, where green deployment happens. Ensure that we run k8s-deploy pipeline first to reset it to \"blue\" state.",
   "keepWaitingPipelines": false,
-  "lastModifiedBy": "raviranjan.gorremuchu@opsmx.io",
+  "lastModifiedBy": "srinivas@opsmx.io",
   "limitConcurrent": true,
   "parameterConfig": [
     {
@@ -321,5 +321,5 @@
     }
   ],
   "triggers": [],
-  "updateTs": "1717423501000"
+  "updateTs": "1717429295000"
 }

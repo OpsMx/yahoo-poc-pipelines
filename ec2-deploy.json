@@ -1,0 +1,125 @@
+{
+  "appConfig": {},
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "keerthi.bingi@opsmx.io",
+  "limitConcurrent": true,
+  "schema": "1",
+  "spelEvaluator": "v4",
+  "stages": [
+    {
+      "continuePipeline": false,
+      "failPipeline": true,
+      "job": "Spin-Deb-AWS-Jav18-Build",
+      "master": "integration-jenkin",
+      "name": "Build",
+      "parameters": {},
+      "refId": "1",
+      "requisiteStageRefIds": [],
+      "type": "jenkins"
+    },
+    {
+      "clusters": [
+        {
+          "account": "awsec2use1",
+          "application": "yahoopoc",
+          "availabilityZones": {
+            "us-east-1": [
+              "us-east-1a",
+              "us-east-1b",
+              "us-east-1c",
+              "us-east-1d",
+              "us-east-1e",
+              "us-east-1f"
+            ]
+          },
+          "capacity": {
+            "desired": 1,
+            "max": 1,
+            "min": 1
+          },
+          "cloudProvider": "aws",
+          "cooldown": 10,
+          "copySourceCustomBlockDeviceMappings": false,
+          "delayBeforeDisableSec": "10",
+          "delayBeforeScaleDownSec": 0,
+          "ebsOptimized": false,
+          "enabledMetrics": [],
+          "freeFormDetails": "asg",
+          "healthCheckGracePeriod": 600,
+          "healthCheckType": "EC2",
+          "iamRole": "ROL-Spinnaker-Managed-Role",
+          "instanceMonitoring": false,
+          "instanceType": "t2.micro",
+          "keyPair": "ami-testing",
+          "loadBalancers": [],
+          "maxRemainingAsgs": 2,
+          "moniker": {
+            "app": "awsdemoapp",
+            "detail": "asg",
+            "stack": "ec2"
+          },
+          "pipelineBeforeCleanup": {
+            "application": "",
+            "pipelineId": ""
+          },
+          "provider": "aws",
+          "rollback": {
+            "onFailure": true
+          },
+          "scaleDown": true,
+          "securityGroups": [
+            "sg-0f89b9be78a1cbf4c"
+          ],
+          "spotPrice": "",
+          "stack": "ec2",
+          "strategy": "redblack",
+          "subnetType": "external (spinEC2vpc)",
+          "suspendedProcesses": [],
+          "tags": {
+            "Name": "YahooEC2DeployPOC"
+          },
+          "targetGroups": [
+            "yahoopoc-pocec2"
+          ],
+          "targetHealthyDeployPercentage": 100,
+          "terminationPolicies": [
+            "Default"
+          ],
+          "useAmiBlockDeviceMappings": false
+        }
+      ],
+      "name": "DeployDev",
+      "refId": "3",
+      "requisiteStageRefIds": [
+        "4"
+      ],
+      "type": "deploy"
+    },
+    {
+      "baseAmi": "ami-06ae296e502d24311",
+      "baseLabel": "release",
+      "baseName": "ops-ubuntu14-java-1",
+      "baseOs": "ubuntu",
+      "cloudProviderType": "aws",
+      "extendedAttributes": {},
+      "name": "Bake",
+      "package": "restapp",
+      "rebake": false,
+      "refId": "4",
+      "region": "us-east-1",
+      "regions": [
+        "us-east-1"
+      ],
+      "requisiteStageRefIds": [
+        "1"
+      ],
+      "skipRegionDetection": true,
+      "storeType": "ebs",
+      "type": "bake",
+      "user": "admin",
+      "vmType": "hvm"
+    }
+  ],
+  "triggers": [],
+  "updateTs": "1717396342000"
+}

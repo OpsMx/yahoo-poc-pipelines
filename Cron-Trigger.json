@@ -1,0 +1,25 @@
+{
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "raviranjan.gorremuchu@opsmx.io",
+  "limitConcurrent": true,
+  "schema": "1",
+  "spelEvaluator": "v4",
+  "stages": [
+    {
+      "name": "Wait",
+      "refId": "1",
+      "requisiteStageRefIds": [],
+      "type": "wait",
+      "waitTime": 8
+    }
+  ],
+  "triggers": [
+    {
+      "cronExpression": "0 0/10 * 1/1 * ? *",
+      "enabled": true,
+      "id": "c7bc98c7-2ecc-495c-af89-b3dd3e679c9d",
+      "type": "cron"
+    }
+  ],
+  "updateTs": "1717423501000"
+}
